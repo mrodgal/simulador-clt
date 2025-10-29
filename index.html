@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Distribuciones Muestrales</title>
+    <title>Simulador de Distribuciones Muestrales (N=100)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* Estilos CSS para el diseño responsive */
+        /* Estilos CSS */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
@@ -23,7 +23,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             overflow: hidden;
         }
-        /* Layout responsive (Flexbox) */
         .main-layout {
             display: flex;
             flex-wrap: wrap;
@@ -40,8 +39,6 @@
             min-width: 400px;
             padding: 25px;
         }
-        
-        /* Estilos de Controles */
         h2 {
             margin-top: 0;
             color: #333;
@@ -56,12 +53,12 @@
             font-weight: 600;
             margin-bottom: 8px;
         }
-        input[type="text"], select {
+        input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            box-sizing: border-box; /* Asegura que el padding no afecte el ancho */
+            box-sizing: border-box; 
         }
         .slider-container {
             display: flex;
@@ -90,15 +87,20 @@
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s;
+            margin-top: 5px; /* Pequeño espacio entre botones */
+        }
+        button.regenerate-button {
+            background-color: #28a745; /* Color verde para regenerar */
+        }
+        button.regenerate-button:hover {
+            background-color: #218838;
         }
         button:hover {
             background-color: #0056b3;
         }
-
-        /* Estilos de Resultados */
         .stats-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 2 columnas */
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -120,7 +122,6 @@
             color: #0056b3;
         }
         
-        /* Ajuste para móviles */
         @media (max-width: 768px) {
             .main-layout {
                 flex-direction: column;
@@ -130,10 +131,9 @@
                 border-bottom: 1px solid #e0e0e0;
             }
             .stats-grid {
-                grid-template-columns: 1fr; /* 1 columna en móvil */
+                grid-template-columns: 1fr;
             }
         }
-
     </style>
 </head>
 <body>
@@ -145,29 +145,29 @@
                 <h2>🧭 Panel de Control</h2>
                 
                 <div class="control-group">
-                    <label for="populationInput">Valores de Población (N ≤ 10)</label>
-                    <input type="text" id="populationInput" value="1, 2, 3, 8, 10">
+                    <label for="populationType">Tipo de Población (N=100)</label>
+                    <select id="populationType">
+                        <option value="uniform">Uniforme</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="skewed">Sesgada</option>
+                        <option value="bimodal">Bimodal</option> </select>
+                    <button id="regeneratePopulationButton" class="regenerate-button">🔄 Regenerar Población</button>
                 </div>
                 
                 <div class="control-group">
                     <label for="sampleSizeSlider">Tamaño de Muestra (n)</label>
                     <div class="slider-container">
-                        <input type="range" id="sampleSizeSlider" min="1" max="30" value="5">
+                        <input type="range" id="sampleSizeSlider" min="1" max="40" value="5">
                         <span id="sampleSizeValue">5</span>
                     </div>
                 </div>
                 
                 <div class="control-group">
-                    <label for="numSimulations">Número de Simulaciones</label>
-                    <select id="numSimulations">
-                        <option value="100">100</option>
-                        <option value="1000" selected>1000</option>
-                        <option value="5000">5000</option>
-                        <option value="10000">10000</option>
-                    </select>
+                    <label for="numSimulationsInput">Número de Simulaciones (1 - 50,000)</label>
+                    <input type="number" id="numSimulationsInput" min="1" max="50000" value="1000">
                 </div>
                 
-                <button id="simulateButton">🚀 Simular</button>
+                <button id="simulateButton">🚀 Simular Medias Muestrales</button>
             </div>
             
             <div class="panel-visualizacion">
@@ -183,11 +183,11 @@
                         <p id="popVariance">--</p>
                     </div>
                     <div class="stat-card">
-                        <h3>📈 Media de Medias (μ_{\bar{x}})</h3>
+                        <h3>📈 Media de Medias (&mu;<sub>x̄</sub>)</h3>
                         <p id="sampleMeanMean">--</p>
                     </div>
                     <div class="stat-card">
-                        <h3>📈 Varianza de Medias (σ²_{\bar{x}})</h3>
+                        <h3>📈 Varianza de Medias (&sigma;²<sub>x̄</sub>)</h3>
                         <p id="sampleMeanVariance">--</p>
                     </div>
                 </div>
@@ -201,98 +201,153 @@
     </div>
 
     <script>
-        // 3. Lógica JavaScript de la aplicación
-        
         // Referencias a elementos del DOM
-        const popInput = document.getElementById('populationInput');
+        const popTypeSelect = document.getElementById('populationType');
+        const regeneratePopulationButton = document.getElementById('regeneratePopulationButton'); // Nuevo botón
         const nSlider = document.getElementById('sampleSizeSlider');
         const nValue = document.getElementById('sampleSizeValue');
-        const numSimsSelect = document.getElementById('numSimulations');
+        const numSimsInput = document.getElementById('numSimulationsInput');
         const simButton = document.getElementById('simulateButton');
         
-        // Referencias a tarjetas de estadísticas
         const popMeanEl = document.getElementById('popMean');
         const popVarianceEl = document.getElementById('popVariance');
         const sampleMeanMeanEl = document.getElementById('sampleMeanMean');
         const sampleMeanVarianceEl = document.getElementById('sampleMeanVariance');
         
-        // Contexto del gráfico
         const ctx = document.getElementById('distributionChart').getContext('2d');
-        let chartInstance = null; // Para destruir el gráfico anterior antes de crear uno nuevo
+        let chartInstance = null; 
         
+        let generatedPopulation = {
+            data: [],
+            mean: 0,
+            variance: 0
+        };
+
         // --- Event Listeners ---
         
-        // Actualizar el valor del deslizador
         nSlider.addEventListener('input', (e) => {
             nValue.textContent = e.target.value;
         });
         
-        // Ejecutar la simulación al hacer clic
+        // Regenerar la población base si el usuario cambia el tipo
+        popTypeSelect.addEventListener('change', () => {
+            generatePopulation();
+            runSimulation(); // Ejecutar simulación con la nueva población
+        });
+
+        // Evento para el nuevo botón de regenerar
+        regeneratePopulationButton.addEventListener('click', () => {
+            generatePopulation();
+            runSimulation(); // Ejecutar simulación con la nueva población
+        });
+        
         simButton.addEventListener('click', runSimulation);
         
-        // Ejecutar una simulación al cargar la página
-        document.addEventListener('DOMContentLoaded', runSimulation);
+        // Al cargar: 1. Generar población, 2. Ejecutar simulación inicial
+        document.addEventListener('DOMContentLoaded', () => {
+            generatePopulation(); // Genera la primera población (por defecto 'Normal')
+            runSimulation();
+        });
 
         // --- Funciones de Cálculo ---
         
-        function getPopulation() {
-            let inputText = popInput.value.trim();
-            if (inputText.endsWith(',')) {
-                inputText = inputText.slice(0, -1);
-            }
-            let popArray = inputText.split(',')
-                                    .map(val => parseFloat(val.trim()))
-                                    .filter(val => !isNaN(val));
-            
-            // Limitar a 10 elementos como se pidió
-            if (popArray.length > 10) {
-                popArray = popArray.slice(0, 10);
-                popInput.value = popArray.join(', ');
-                alert('La población se ha limitado a los primeros 10 elementos.');
-            }
-            
-            if (popArray.length === 0) {
-                alert('Población no válida. Usando valores por defecto.');
-                popInput.value = "1, 2, 3, 8, 10";
-                return [1, 2, 3, 8, 10];
-            }
-            
-            return popArray;
-        }
-
         function calculateMean(arr) {
             return arr.reduce((acc, val) => acc + val, 0) / arr.length;
         }
         
         function calculateVariance(arr, mean) {
-            // Varianza poblacional (N)
             return arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / arr.length;
         }
 
-        // Función de densidad de probabilidad (PDF) de la Normal
         function normalPDF(x, mean, stdDev) {
             if (stdDev === 0) return (x === mean) ? Infinity : 0;
             const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
             return (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
         }
+        
+        // --- Función para generar la población (N=100) ---
+        function generatePopulation() {
+            const N = 100;
+            const type = popTypeSelect.value;
+            let popData = [];
+            
+            switch(type) {
+                case 'uniform':
+                    // Distribución uniforme (ej: de 0 a 100)
+                    for (let i = 0; i < N; i++) {
+                        popData.push(Math.random() * 100);
+                    }
+                    break;
+                
+                case 'skewed':
+                    // Distribución sesgada a la derecha (usando Math.pow)
+                    // Más valores bajos, cola a la derecha
+                    for (let i = 0; i < N; i++) {
+                        popData.push(Math.pow(Math.random(), 3) * 100); 
+                    }
+                    break;
+
+                case 'bimodal':
+                    // Distribución bimodal (dos picos)
+                    // Combinamos dos normales con diferentes medias
+                    for (let i = 0; i < N; i++) {
+                        if (Math.random() < 0.5) { // 50% de probabilidad para cada modo
+                            popData.push((boxMullerRandom() * 10) + 30); // Modo 1: media ~30
+                        } else {
+                            popData.push((boxMullerRandom() * 10) + 70); // Modo 2: media ~70
+                        }
+                    }
+                    break;
+
+                case 'normal':
+                default:
+                    // Distribución normal (Box-Muller transform)
+                    // Media 50, Desviación Estándar 15
+                    for (let i = 0; i < N; i++) { // Bucle hasta N, Box-Muller genera pares
+                        popData.push((boxMullerRandom() * 15) + 50);
+                    }
+                    break;
+            }
+            
+            // Asegurarse de que los valores estén dentro de un rango razonable (ej. 0-100)
+            popData = popData.map(val => Math.max(0, Math.min(100, val)));
+
+            generatedPopulation.data = popData;
+            generatedPopulation.mean = calculateMean(popData);
+            generatedPopulation.variance = calculateVariance(popData, generatedPopulation.mean);
+            
+            popMeanEl.textContent = generatedPopulation.mean.toFixed(3);
+            popVarianceEl.textContent = generatedPopulation.variance.toFixed(3);
+        }
+
+        // Helper para la transformación Box-Muller (genera un número normal estándar)
+        function boxMullerRandom() {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random(); // Converter to (0,1)
+            while(v === 0) v = Math.random();
+            return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+        }
 
         // --- Función Principal de Simulación ---
         
         function runSimulation() {
-            const population = getPopulation();
+            const numSimulations = parseInt(numSimsInput.value);
+            if (isNaN(numSimulations) || numSimulations < 1 || numSimulations > 50000) {
+                alert("Por favor, introduce un número de simulaciones entre 1 y 50,000.");
+                return;
+            }
+            
+            const population = generatedPopulation.data;
+            const popMean = generatedPopulation.mean;
+            const popVariance = generatedPopulation.variance;
+            
             const n = parseInt(nSlider.value);
-            const numSimulations = parseInt(numSimsSelect.value);
             
-            if (population.length === 0) return;
+            if (population.length === 0) {
+                alert("Error: La población no se ha generado correctamente.");
+                return;
+            }
 
-            // 1. Calcular estadísticas de la POBLACIÓN
-            const popMean = calculateMean(population);
-            const popVariance = calculateVariance(population, popMean);
-            
-            popMeanEl.textContent = popMean.toFixed(3);
-            popVarianceEl.textContent = popVariance.toFixed(3);
-            
-            // 2. Ejecutar la SIMULACIÓN (Muestreo con reemplazo)
             const sampleMeans = [];
             for (let i = 0; i < numSimulations; i++) {
                 let currentSample = [];
@@ -304,54 +359,70 @@
                 sampleMeans.push(sampleMean);
             }
             
-            // 3. Calcular estadísticas de la DISTRIBUCIÓN MUESTRAL
             const sampleMeanMean = calculateMean(sampleMeans);
-            const sampleMeanVariance = calculateVariance(sampleMeans, sampleMeanMean);
+            const sampleMeanVariance = calculateVariance(sampleMeans, sampleMeanMean); 
             
             sampleMeanMeanEl.textContent = sampleMeanMean.toFixed(3);
             sampleMeanVarianceEl.textContent = sampleMeanVariance.toFixed(3);
 
-            // 4. Preparar datos para el GRÁFICO
             updateChart(sampleMeans, popMean, popVariance, n);
         }
         
         // --- Función de Gráfico ---
 
         function updateChart(sampleMeans, popMean, popVariance, n) {
-            // Destruir el gráfico anterior si existe
             if (chartInstance) {
                 chartInstance.destroy();
             }
 
-            // A. Preparar datos para el Histograma (Diagrama de Barras)
-            const min = Math.min(...sampleMeans);
-            const max = Math.max(...sampleMeans);
-            const numBins = Math.max(10, Math.min(Math.ceil(Math.sqrt(sampleMeans.length)), 40));
-            const binWidth = (max - min) / numBins;
+            // Asegurarse de tener un rango válido, incluso si solo hay un valor en sampleMeans
+            const minVal = sampleMeans.length > 0 ? Math.min(...sampleMeans) : 0;
+            const maxVal = sampleMeans.length > 0 ? Math.max(...sampleMeans) : 100; // Asumimos rango 0-100 para poblaciones
+            
+            // Si min y max son iguales (ej: n=1 y todos los valores de la muestra son iguales)
+            // ajustamos ligeramente el rango para que el histograma se pueda dibujar
+            let adjustedMin = minVal;
+            let adjustedMax = maxVal;
+            if (minVal === maxVal) {
+                adjustedMin = minVal - 1;
+                adjustedMax = maxVal + 1;
+                if (adjustedMin < 0) adjustedMin = 0;
+                if (adjustedMax > 100) adjustedMax = 100; // O un límite más sensato según tus datos
+                if (adjustedMin === adjustedMax) { // Caso extremo si min/max es 0 o 100
+                     adjustedMin = minVal * 0.9;
+                     adjustedMax = minVal * 1.1;
+                     if (adjustedMin === adjustedMax) { // Si minVal es 0
+                         adjustedMin = 0; adjustedMax = 1;
+                     }
+                 }
+            }
+
+
+            const numBins = Math.max(10, Math.min(Math.ceil(Math.sqrt(sampleMeans.length)), 75));
+            const binWidth = (adjustedMax - adjustedMin) / numBins;
             
             const bins = new Array(numBins).fill(0);
             const labels = new Array(numBins);
             
             for (let i = 0; i < numBins; i++) {
-                const binStart = min + i * binWidth;
+                const binStart = adjustedMin + i * binWidth;
                 const binEnd = binStart + binWidth;
                 labels[i] = ((binStart + binEnd) / 2).toFixed(2);
             }
             
             sampleMeans.forEach(mean => {
-                let binIndex = Math.floor((mean - min) / binWidth);
-                if (binIndex === numBins) binIndex--; // Para el valor máximo
+                let binIndex = Math.floor((mean - adjustedMin) / binWidth);
+                if (binIndex === numBins) binIndex--;
                 if (binIndex >= 0 && binIndex < numBins) {
                     bins[binIndex]++;
                 }
             });
 
-            // B. Preparar datos para el Ajuste Normal (Teorema Central del Límite)
-            const mu_x = popMean; // Media teórica
-            const sigma_x = Math.sqrt(popVariance / n); // Desviación estándar teórica
+            const mu_x = popMean; 
+            const sigma_x = Math.sqrt(popVariance / n);
             const normalCurveData = [];
             
-            const scaleFactor = sampleMeans.length * binWidth; // Escalar PDF a la frecuencia del histograma
+            const scaleFactor = sampleMeans.length * binWidth; 
             
             for (let i = 0; i < numBins; i++) {
                 const x = parseFloat(labels[i]);
@@ -359,9 +430,8 @@
                 normalCurveData.push(y);
             }
 
-            // C. Dibujar el Gráfico (Combinado de Barras y Línea)
             chartInstance = new Chart(ctx, {
-                type: 'bar', // Gráfico base de barras
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
@@ -375,7 +445,7 @@
                         {
                             label: 'Ajuste Normal Teórico (TCL)',
                             data: normalCurveData,
-                            type: 'line', // Superponer un gráfico de línea
+                            type: 'line',
                             fill: false,
                             borderColor: 'rgba(255, 99, 132, 1)',
                             backgroundColor: 'rgba(255, 99, 132, 0.6)',
@@ -398,7 +468,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Media Muestral'
+                                text: 'Media Muestral (x̄)'
                             }
                         }
                     }

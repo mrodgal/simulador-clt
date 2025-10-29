@@ -3,205 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Distribuciones Muestrales (Optimizado)</title>
-    <script src="https://cdn.jsdelivr/npm/chart.js"></script>
+    <title>Simulador de Distribuciones Muestrales (Corregido)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* Tipografía Fluida */
-        html {
-            font-size: 14px; 
-        }
-        @media (min-width: 768px) {
-            html {
-                font-size: 15px;
-            }
-        }
-        @media (min-width: 1024px) {
-            html {
-                font-size: 16px;
-            }
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 1rem; /* Padding por defecto para PC y Tablet */
-        }
-        .app-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        .main-layout {
-            display: flex;
-            flex-wrap: wrap;
-        }
-        .panel-control {
-            flex: 1;
-            min-width: 280px;
-            padding: 1.5rem;
-            border-right: 1px solid #e0e0e0;
-            background: #fafafa;
-        }
-        .panel-visualizacion {
-            flex: 2;
-            min-width: 300px;
-            padding: 1.5rem;
-        }
-        
-        /* Fuentes en 'rem' */
-        h2 {
-            margin-top: 0;
-            color: #333;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 0.5rem;
-            font-size: 1.75rem; 
-        }
-        .control-group {
-            margin-bottom: 1.25rem;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-        input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box; 
-            font-size: 1rem;
-        }
-        .slider-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        input[type="range"] {
-            flex: 1;
-        }
-        #sampleSizeValue {
-            font-weight: 700;
-            background: #e0e0e0;
-            padding: 0.35rem 0.75rem;
-            border-radius: 4px;
-            min-width: 30px;
-            text-align: center;
-            font-size: 1rem;
-        }
-        button {
-            width: 100%;
-            padding: 0.8rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 0.5rem;
-        }
-        button#simulateButton {
-             background-color: #007bff;
-             color: white;
-        }
-        button.regenerate-button {
-            background-color: #28a745;
-            color: white;
-        }
-        button.regenerate-button:hover {
-            background-color: #218838;
-        }
-        button#simulateButton:hover {
-            background-color: #0056b3;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .stat-card {
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            padding: 1rem;
-        }
-        .stat-card h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1rem;
-            color: #555;
-        }
-        .stat-card p {
-            margin: 0;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #0056b3;
-            word-break: break-all;
-        }
-        
-        /* --- CAMBIO: Altura de Gráfico por Dispositivo --- */
-        #chart-container {
-            position: relative;
-            width: 100%;
-            height: 50vh; /* Altura Móvil por defecto */
-            min-height: 350px;
-        }
-
-        @media (min-width: 768px) {
-             /* Altura Tablet */
-            #chart-container {
-                height: 400px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            /* Altura PC */
-            #chart-container {
-                height: 450px;
-            }
-        }
-        /* --- FIN CAMBIO --- */
-
-
-        /* --- CAMBIO: Media Query Móvil Optimizada --- */
+        html { font-size: 14px; }
+        @media (min-width: 768px) { html { font-size: 15px; } }
+        @media (min-width: 1024px) { html { font-size: 16px; } }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; background-color: #f4f7f6; margin: 0; padding: 1rem; }
+        .app-container { max-width: 1200px; margin: 0 auto; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+        .main-layout { display: flex; flex-wrap: wrap; }
+        .panel-control { flex: 1; min-width: 280px; padding: 1.5rem; border-right: 1px solid #e0e0e0; background: #fafafa; }
+        .panel-visualizacion { flex: 2; min-width: 300px; padding: 1.5rem; }
+        h2 { margin-top: 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 0.5rem; font-size: 1.75rem; }
+        .control-group { margin-bottom: 1.25rem; }
+        label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
+        .slider-container { display: flex; align-items: center; gap: 1rem; }
+        input[type="range"] { flex: 1; }
+        #sampleSizeValue { font-weight: 700; background: #e0e0e0; padding: 0.35rem 0.75rem; border-radius: 4px; min-width: 30px; text-align: center; font-size: 1rem; }
+        button { width: 100%; padding: 0.8rem; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; margin-top: 0.5rem; }
+        button#simulateButton { background-color: #007bff; color: white; }
+        button.regenerate-button { background-color: #28a745; color: white; }
+        button.regenerate-button:hover { background-color: #218838; }
+        button#simulateButton:hover { background-color: #0056b3; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 5px; padding: 1rem; }
+        .stat-card h3 { margin: 0 0 0.5rem 0; font-size: 1rem; color: #555; }
+        .stat-card p { margin: 0; font-size: 1.4rem; font-weight: 700; color: #0056b3; word-break: break-all; }
+        #chart-container { position: relative; width: 100%; height: 50vh; min-height: 350px; }
+        @media (min-width: 768px) { #chart-container { height: 400px; } }
+        @media (min-width: 1024px) { #chart-container { height: 450px; } }
         @media (max-width: 767px) {
-            body {
-                padding: 0; /* Elimina padding para que la app ocupe todo */
-            }
-            .app-container {
-                border-radius: 0; /* Sin bordes redondeados en móvil */
-                box-shadow: none; /* Sin sombra en móvil */
-            }
-            .main-layout {
-                flex-direction: column; /* 1 columna */
-            }
-            .panel-control {
-                border-right: none;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr; /* 1 columna de stats */
-            }
+            body { padding: 0; }
+            .app-container { border-radius: 0; box-shadow: none; }
+            .main-layout { flex-direction: column; }
+            .panel-control { border-right: none; border-bottom: 1px solid #e0e0e0; }
+            .stats-grid { grid-template-columns: 1fr; }
         }
-        /* --- FIN CAMBIO --- */
     </style>
 </head>
 <body>
 
     <div class="app-container">
         <div class="main-layout">
-            
             <div class="panel-control">
                 <h2>🧭 Panel de Control</h2>
-                
                 <div class="control-group">
                     <label for="populationType">Tipo de Población (N=100)</label>
                     <select id="populationType">
@@ -212,7 +59,6 @@
                     </select>
                     <button id="regeneratePopulationButton" class="regenerate-button">🔄 Regenerar Población</button>
                 </div>
-                
                 <div class="control-group">
                     <label for="sampleSizeSlider">Tamaño de Muestra (n)</label>
                     <div class="slider-container">
@@ -220,18 +66,14 @@
                         <span id="sampleSizeValue">5</span>
                     </div>
                 </div>
-                
                 <div class="control-group">
                     <label for="numSimulationsInput">Número de Simulaciones (1 - 50,000)</label>
                     <input type="number" id="numSimulationsInput" min="1" max="50000" value="1000">
                 </div>
-                
                 <button id="simulateButton">🚀 Simular (Manual)</button>
             </div>
-            
             <div class="panel-visualizacion">
                 <h2>📊 Resultados de la Simulación</h2>
-                
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>🌍 Media Poblacional (μ)</h3>
@@ -250,17 +92,15 @@
                         <p id="sampleMeanVariance">--</p>
                     </div>
                 </div>
-                
                 <div id="chart-container">
                     <canvas id="distributionChart"></canvas>
                 </div>
             </div>
-            
         </div>
     </div>
 
     <script>
-        // Referencias a elementos del DOM
+        // Referencias a elementos del DOM (sin cambios)
         const popTypeSelect = document.getElementById('populationType');
         const regeneratePopulationButton = document.getElementById('regeneratePopulationButton');
         const nSlider = document.getElementById('sampleSizeSlider');
@@ -273,45 +113,30 @@
         const sampleMeanVarianceEl = document.getElementById('sampleMeanVariance');
         const ctx = document.getElementById('distributionChart').getContext('2d');
         let chartInstance = null; 
-        
-        let generatedPopulation = {
-            data: [],
-            mean: 0,
-            variance: 0
-        };
+        let generatedPopulation = { data: [], mean: 0, variance: 0 };
 
-        // --- Event Listeners con Auto-Refresco ---
-        
+        // --- Event Listeners (sin cambios) ---
         nSlider.addEventListener('input', (e) => {
             nValue.textContent = e.target.value;
-            runSimulation(); // Auto-refresco al mover el slider
+            runSimulation();
         });
-        
         popTypeSelect.addEventListener('change', () => {
             generatePopulation();
-            runSimulation(); // Auto-refresco al cambiar tipo
+            runSimulation();
         });
-
         regeneratePopulationButton.addEventListener('click', () => {
             generatePopulation();
-            runSimulation(); // Auto-refresco al regenerar
+            runSimulation();
         });
-        
         numSimsInput.addEventListener('input', () => {
-            // Usa 'debounce' para esperar que el usuario termine de teclear
             debounce(runSimulation, 500)();
         });
-        
-        // Botón manual por si acaso
         simButton.addEventListener('click', runSimulation);
-        
-        // Carga inicial
         document.addEventListener('DOMContentLoaded', () => {
             generatePopulation();
             runSimulation();
         });
         
-        // Función Debounce para optimizar el input de número
         let debounceTimer;
         function debounce(func, delay) {
             return function() {
@@ -322,16 +147,13 @@
             }
         }
 
-        // --- Funciones de Cálculo ---
-        
+        // --- Funciones de Cálculo (sin cambios) ---
         function calculateMean(arr) {
             return arr.reduce((acc, val) => acc + val, 0) / arr.length;
         }
-        
         function calculateVariance(arr, mean) {
             return arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / arr.length;
         }
-
         function normalPDF(x, mean, stdDev) {
             if (stdDev <= 1e-9) { 
                 return (Math.abs(x - mean) < 1e-9) ? 1000 : 0; 
@@ -339,40 +161,28 @@
             const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
             return (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
         }
-        
         function generatePopulation() {
             const N = 100;
             const type = popTypeSelect.value;
             let popData = [];
-            
             switch(type) {
                 case 'uniform':
-                    for (let i = 0; i < N; i++) {
-                        popData.push(Math.random() * 100);
-                    }
+                    for (let i = 0; i < N; i++) popData.push(Math.random() * 100);
                     break;
                 case 'skewed':
-                    for (let i = 0; i < N; i++) {
-                        popData.push(Math.pow(Math.random(), 3) * 100); 
-                    }
+                    for (let i = 0; i < N; i++) popData.push(Math.pow(Math.random(), 3) * 100); 
                     break;
                 case 'bimodal':
                     for (let i = 0; i < N; i++) {
-                        if (Math.random() < 0.5) {
-                            popData.push((boxMullerRandom() * 10) + 30);
-                        } else {
-                            popData.push((boxMullerRandom() * 10) + 70);
-                        }
+                        if (Math.random() < 0.5) popData.push((boxMullerRandom() * 10) + 30);
+                        else popData.push((boxMullerRandom() * 10) + 70);
                     }
                     break;
                 case 'normal':
                 default:
-                    for (let i = 0; i < N; i++) {
-                        popData.push((boxMullerRandom() * 15) + 50);
-                    }
+                    for (let i = 0; i < N; i++) popData.push((boxMullerRandom() * 15) + 50);
                     break;
             }
-            
             popData = popData.map(val => Math.max(0, Math.min(100, val)));
             generatedPopulation.data = popData;
             generatedPopulation.mean = calculateMean(popData);
@@ -380,7 +190,6 @@
             popMeanEl.textContent = generatedPopulation.mean.toFixed(3);
             popVarianceEl.textContent = generatedPopulation.variance.toFixed(3);
         }
-
         function boxMullerRandom() {
             let u = 0, v = 0;
             while(u === 0) u = Math.random();
@@ -388,22 +197,18 @@
             return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
         }
 
-        // --- Función Principal de Simulación ---
-        
+        // --- Función Principal de Simulación (sin cambios) ---
         function runSimulation() {
             const numSimulations = parseInt(numSimsInput.value);
             if (isNaN(numSimulations) || numSimulations < 1 || numSimulations > 50000) {
                 console.warn("Simulación omitida: valor inválido.");
                 return;
             }
-            
             const population = generatedPopulation.data;
             const popMean = generatedPopulation.mean;
             const popVariance = generatedPopulation.variance;
             const n = parseInt(nSlider.value);
-            
             if (population.length === 0) return;
-
             const sampleMeans = [];
             for (let i = 0; i < numSimulations; i++) {
                 let currentSample = [];
@@ -411,21 +216,16 @@
                     const randomIndex = Math.floor(Math.random() * population.length);
                     currentSample.push(population[randomIndex]);
                 }
-                const sampleMean = calculateMean(currentSample);
-                sampleMeans.push(sampleMean);
+                sampleMeans.push(calculateMean(currentSample));
             }
-            
             const sampleMeanMean = calculateMean(sampleMeans);
             const sampleMeanVariance = calculateVariance(sampleMeans, sampleMeanMean); 
-            
             sampleMeanMeanEl.textContent = sampleMeanMean.toFixed(3);
             sampleMeanVarianceEl.textContent = sampleMeanVariance.toFixed(3);
-
             updateChart(sampleMeans, popMean, popVariance, n);
         }
         
-        // --- Función de Gráfico (con curva suavizada) ---
-
+        // --- *** CAMBIO: Función de Gráfico CORREGIDA *** ---
         function updateChart(sampleMeans, popMean, popVariance, n) {
             if (chartInstance) {
                 chartInstance.destroy();
@@ -442,7 +242,7 @@
                 if(adjustedMin === 0 && adjustedMax === 0) adjustedMax = 1;
             }
 
-            // A. Preparar datos para el Histograma
+            // A. Preparar datos para el Histograma (como objetos {x, y})
             const numBins = Math.max(10, Math.min(Math.ceil(Math.sqrt(sampleMeans.length)), 75));
             const binWidth = (adjustedMax - adjustedMin) / numBins;
             
@@ -451,61 +251,61 @@
                  return;
             }
 
-            const bins = new Array(numBins).fill(0);
-            const labels = new Array(numBins);
-            
-            for (let i = 0; i < numBins; i++) {
-                const binStart = adjustedMin + i * binWidth;
-                labels[i] = (binStart + binWidth / 2).toFixed(2);
-            }
-            
+            const binCounts = new Array(numBins).fill(0);
             sampleMeans.forEach(mean => {
                 let binIndex = Math.floor((mean - adjustedMin) / binWidth);
                 if (binIndex === numBins) binIndex--;
                 if (binIndex >= 0 && binIndex < numBins) {
-                    bins[binIndex]++;
+                    binCounts[binIndex]++;
                 }
             });
 
-            // B. Preparar datos para el Ajuste Normal Suavizado
+            const binsData = []; // Array para los datos de las barras
+            for (let i = 0; i < numBins; i++) {
+                const binStart = adjustedMin + i * binWidth;
+                const binCenter = binStart + binWidth / 2;
+                binsData.push({
+                    x: binCenter, // Coordenada X
+                    y: binCounts[i]  // Coordenada Y (altura)
+                });
+            }
+
+            // B. Preparar datos para el Ajuste Normal Suavizado (como objetos {x, y})
             const mu_x = popMean; 
             const sigma_x = Math.sqrt(popVariance / n);
-            
             const normalCurvePoints = 200;
             const step = (adjustedMax - adjustedMin) / normalCurvePoints;
-            const normalLabels = [];
-            const normalData = [];
-
+            const normalCurveData = []; // Array para los datos de la línea
             const scaleFactor = sampleMeans.length * binWidth; 
             
             for (let i = 0; i <= normalCurvePoints; i++) {
                 const x = adjustedMin + i * step;
-                normalLabels.push(x.toFixed(2));
                 const y = normalPDF(x, mu_x, sigma_x) * scaleFactor;
-                normalData.push(y);
+                normalCurveData.push({ x: x, y: y }); // Objeto {x, y}
             }
 
-            // C. Dibujar el Gráfico
+            // C. Dibujar el Gráfico (con eje X lineal)
             chartInstance = new Chart(ctx, {
-                type: 'bar',
+                type: 'bar', // Tipo base
                 data: {
-                    labels: labels,
+                    // Ya no hay 'labels' globales
                     datasets: [
                         {
                             label: 'Frecuencia de Medias Muestrales (Simulado)',
-                            data: bins,
+                            data: binsData, // Datos como {x, y}
                             backgroundColor: 'rgba(0, 123, 255, 0.6)',
                             borderColor: 'rgba(0, 123, 255, 1)',
-                            borderWidth: 1
+                            borderWidth: 1,
+                            // Controlar el ancho de las barras en un eje lineal
+                            barPercentage: 1.0,
+                            categoryPercentage: 1.0
                         },
                         {
                             label: 'Ajuste Normal Teórico (TCL)',
-                            data: normalData, 
-                            labels: normalLabels,
-                            type: 'line',
+                            data: normalCurveData, // Datos como {x, y}
+                            type: 'line', // Sobrescribir el tipo a 'line'
                             fill: false,
                             borderColor: 'rgba(255, 99, 132, 1)',
-                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
                             tension: 0.4,
                             pointRadius: 0
                         }
@@ -517,18 +317,16 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Frecuencia'
-                            }
+                            title: { display: true, text: 'Frecuencia' }
                         },
                         x: {
-                            type: 'category',
-                            labels: labels,
+                            type: 'linear', // <-- LA SOLUCIÓN: Eje X Numérico Lineal
                             title: {
                                 display: true,
                                 text: 'Media Muestral (x̄)'
                             },
+                            min: adjustedMin,
+                            max: adjustedMax
                         }
                     }
                 }

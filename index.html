@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Distribuciones Muestrales (Responsive)</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Simulador de Distribuciones Muestrales (Optimizado)</title>
+    <script src="https://cdn.jsdelivr/npm/chart.js"></script>
     
     <style>
-        /* Tipografía Fluida (Responsive) */
+        /* Tipografía Fluida */
         html {
-            font-size: 14px; /* Base para móviles */
+            font-size: 14px; 
         }
         @media (min-width: 768px) {
             html {
-                font-size: 15px; /* Base para tablets */
+                font-size: 15px;
             }
         }
         @media (min-width: 1024px) {
             html {
-                font-size: 16px; /* Base para PC */
+                font-size: 16px;
             }
         }
 
@@ -27,7 +27,7 @@
             line-height: 1.6;
             background-color: #f4f7f6;
             margin: 0;
-            padding: 1rem;
+            padding: 1rem; /* Padding por defecto para PC y Tablet */
         }
         .app-container {
             max-width: 1200px;
@@ -54,7 +54,7 @@
             padding: 1.5rem;
         }
         
-        /* Fuentes en 'rem' para escalar */
+        /* Fuentes en 'rem' */
         h2 {
             margin-top: 0;
             color: #333;
@@ -147,40 +147,51 @@
             word-break: break-all;
         }
         
-        /* Contenedor del Gráfico Responsive */
+        /* --- CAMBIO: Altura de Gráfico por Dispositivo --- */
         #chart-container {
             position: relative;
             width: 100%;
-            height: 50vh; /* Altura en móvil */
-            min-height: 300px;
+            height: 50vh; /* Altura Móvil por defecto */
+            min-height: 350px;
         }
 
-        /* Ajustes de Layout */
-        @media (max-width: 768px) {
+        @media (min-width: 768px) {
+             /* Altura Tablet */
+            #chart-container {
+                height: 400px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            /* Altura PC */
+            #chart-container {
+                height: 450px;
+            }
+        }
+        /* --- FIN CAMBIO --- */
+
+
+        /* --- CAMBIO: Media Query Móvil Optimizada --- */
+        @media (max-width: 767px) {
             body {
-                padding: 0;
+                padding: 0; /* Elimina padding para que la app ocupe todo */
             }
             .app-container {
-                border-radius: 0;
-                box-shadow: none;
+                border-radius: 0; /* Sin bordes redondeados en móvil */
+                box-shadow: none; /* Sin sombra en móvil */
             }
             .main-layout {
-                flex-direction: column;
+                flex-direction: column; /* 1 columna */
             }
             .panel-control {
                 border-right: none;
                 border-bottom: 1px solid #e0e0e0;
             }
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr; /* 1 columna de stats */
             }
         }
-        
-        @media (min-width: 769px) {
-            #chart-container {
-                height: 400px; /* Altura fija en PC/tablet */
-            }
-        }
+        /* --- FIN CAMBIO --- */
     </style>
 </head>
 <body>
@@ -322,7 +333,9 @@
         }
 
         function normalPDF(x, mean, stdDev) {
-            if (stdDev <= 0) return (x === mean) ? Infinity : 0;
+            if (stdDev <= 1e-9) { 
+                return (Math.abs(x - mean) < 1e-9) ? 1000 : 0; 
+            }
             const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
             return (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
         }
@@ -379,7 +392,6 @@
         
         function runSimulation() {
             const numSimulations = parseInt(numSimsInput.value);
-            // Validación suave para no molestar al usuario mientras teclea
             if (isNaN(numSimulations) || numSimulations < 1 || numSimulations > 50000) {
                 console.warn("Simulación omitida: valor inválido.");
                 return;
@@ -412,7 +424,7 @@
             updateChart(sampleMeans, popMean, popVariance, n);
         }
         
-        // --- Función de Gráfico ---
+        // --- Función de Gráfico (con curva suavizada) ---
 
         function updateChart(sampleMeans, popMean, popVariance, n) {
             if (chartInstance) {
@@ -430,10 +442,11 @@
                 if(adjustedMin === 0 && adjustedMax === 0) adjustedMax = 1;
             }
 
+            // A. Preparar datos para el Histograma
             const numBins = Math.max(10, Math.min(Math.ceil(Math.sqrt(sampleMeans.length)), 75));
             const binWidth = (adjustedMax - adjustedMin) / numBins;
             
-            if(binWidth <= 0) { // Evitar bucles infinitos si el ancho es 0
+            if(binWidth <= 0) { 
                  console.error("Ancho de bin inválido");
                  return;
             }
@@ -454,18 +467,25 @@
                 }
             });
 
+            // B. Preparar datos para el Ajuste Normal Suavizado
             const mu_x = popMean; 
             const sigma_x = Math.sqrt(popVariance / n);
-            const normalCurveData = [];
             
+            const normalCurvePoints = 200;
+            const step = (adjustedMax - adjustedMin) / normalCurvePoints;
+            const normalLabels = [];
+            const normalData = [];
+
             const scaleFactor = sampleMeans.length * binWidth; 
             
-            for (let i = 0; i < numBins; i++) {
-                const x = parseFloat(labels[i]);
+            for (let i = 0; i <= normalCurvePoints; i++) {
+                const x = adjustedMin + i * step;
+                normalLabels.push(x.toFixed(2));
                 const y = normalPDF(x, mu_x, sigma_x) * scaleFactor;
-                normalCurveData.push(y);
+                normalData.push(y);
             }
 
+            // C. Dibujar el Gráfico
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -480,19 +500,20 @@
                         },
                         {
                             label: 'Ajuste Normal Teórico (TCL)',
-                            data: normalCurveData,
+                            data: normalData, 
+                            labels: normalLabels,
                             type: 'line',
                             fill: false,
                             borderColor: 'rgba(255, 99, 132, 1)',
                             backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                            tension: 0.1,
+                            tension: 0.4,
                             pointRadius: 0
                         }
                     ]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Clave para que el gráfico llene el div
+                    maintainAspectRatio: false, 
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -502,10 +523,12 @@
                             }
                         },
                         x: {
+                            type: 'category',
+                            labels: labels,
                             title: {
                                 display: true,
                                 text: 'Media Muestral (x̄)'
-                            }
+                            },
                         }
                     }
                 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Distribuciones Muestrales (Corregido)</title>
+    <title>Simulador de Distribuciones Muestrales (Final)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -244,7 +244,7 @@
 
             // A. Preparar datos para el Histograma
             const numBins = Math.max(10, Math.min(Math.ceil(Math.sqrt(sampleMeans.length)), 75));
-            const binWidth = (adjustedMax - adjustedMin) / numBins; // <-- Calculamos el ancho
+            const binWidth = (adjustedMax - adjustedMin) / numBins;
             
             if(binWidth <= 0) { 
                  console.error("Ancho de bin inválido");
@@ -260,14 +260,18 @@
                 }
             });
 
+            // --- *** ESTA ES LA CORRECCIÓN *** ---
+            // Cambiamos el formato de los datos de las barras
             const binsData = [];
             for (let i = 0; i < numBins; i++) {
-                const binCenter = adjustedMin + i * binWidth + binWidth / 2;
+                const binStart = adjustedMin + i * binWidth;
+                const binEnd = binStart + binWidth;
                 binsData.push({
-                    x: binCenter,
+                    x: [binStart, binEnd], // Formato [inicio, fin]
                     y: binCounts[i]
                 });
             }
+            // --- *** FIN DE LA CORRECCIÓN *** ---
 
             // B. Preparar datos para el Ajuste Normal Suavizado
             const mu_x = popMean; 
@@ -290,13 +294,11 @@
                     datasets: [
                         {
                             label: 'Frecuencia de Medias Muestrales (Simulado)',
-                            data: binsData,
+                            data: binsData, // Usamos los nuevos datos
                             backgroundColor: 'rgba(0, 123, 255, 0.6)',
                             borderColor: 'rgba(0, 123, 255, 1)',
                             borderWidth: 1,
-                            // --- *** ESTA ES LA LÍNEA CORREGIDA *** ---
-                            barThickness: binWidth * 0.9, // Usar el ancho del bin
-                            // --- *** FIN DE LA CORRECCIÓN *** ---
+                            // Ya no necesitamos 'barThickness'
                         },
                         {
                             label: 'Ajuste Normal Teórico (TCL)',
@@ -318,7 +320,7 @@
                             title: { display: true, text: 'Frecuencia' }
                         },
                         x: {
-                            type: 'linear', // Eje X Numérico Lineal
+                            type: 'linear',
                             title: {
                                 display: true,
                                 text: 'Media Muestral (x̄)'

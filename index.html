@@ -242,9 +242,9 @@
                 if(adjustedMin === 0 && adjustedMax === 0) adjustedMax = 1;
             }
 
-            // A. Preparar datos para el Histograma (como objetos {x, y})
+            // A. Preparar datos para el Histograma
             const numBins = Math.max(10, Math.min(Math.ceil(Math.sqrt(sampleMeans.length)), 75));
-            const binWidth = (adjustedMax - adjustedMin) / numBins;
+            const binWidth = (adjustedMax - adjustedMin) / numBins; // <-- Calculamos el ancho
             
             if(binWidth <= 0) { 
                  console.error("Ancho de bin inválido");
@@ -260,50 +260,48 @@
                 }
             });
 
-            const binsData = []; // Array para los datos de las barras
+            const binsData = [];
             for (let i = 0; i < numBins; i++) {
-                const binStart = adjustedMin + i * binWidth;
-                const binCenter = binStart + binWidth / 2;
+                const binCenter = adjustedMin + i * binWidth + binWidth / 2;
                 binsData.push({
-                    x: binCenter, // Coordenada X
-                    y: binCounts[i]  // Coordenada Y (altura)
+                    x: binCenter,
+                    y: binCounts[i]
                 });
             }
 
-            // B. Preparar datos para el Ajuste Normal Suavizado (como objetos {x, y})
+            // B. Preparar datos para el Ajuste Normal Suavizado
             const mu_x = popMean; 
             const sigma_x = Math.sqrt(popVariance / n);
             const normalCurvePoints = 200;
             const step = (adjustedMax - adjustedMin) / normalCurvePoints;
-            const normalCurveData = []; // Array para los datos de la línea
+            const normalCurveData = [];
             const scaleFactor = sampleMeans.length * binWidth; 
             
             for (let i = 0; i <= normalCurvePoints; i++) {
                 const x = adjustedMin + i * step;
                 const y = normalPDF(x, mu_x, sigma_x) * scaleFactor;
-                normalCurveData.push({ x: x, y: y }); // Objeto {x, y}
+                normalCurveData.push({ x: x, y: y });
             }
 
-            // C. Dibujar el Gráfico (con eje X lineal)
+            // C. Dibujar el Gráfico
             chartInstance = new Chart(ctx, {
-                type: 'bar', // Tipo base
+                type: 'bar',
                 data: {
-                    // Ya no hay 'labels' globales
                     datasets: [
                         {
                             label: 'Frecuencia de Medias Muestrales (Simulado)',
-                            data: binsData, // Datos como {x, y}
+                            data: binsData,
                             backgroundColor: 'rgba(0, 123, 255, 0.6)',
                             borderColor: 'rgba(0, 123, 255, 1)',
                             borderWidth: 1,
-                            // Controlar el ancho de las barras en un eje lineal
-                            barPercentage: 1.0,
-                            categoryPercentage: 1.0
+                            // --- *** ESTA ES LA LÍNEA CORREGIDA *** ---
+                            barThickness: binWidth * 0.9, // Usar el ancho del bin
+                            // --- *** FIN DE LA CORRECCIÓN *** ---
                         },
                         {
                             label: 'Ajuste Normal Teórico (TCL)',
-                            data: normalCurveData, // Datos como {x, y}
-                            type: 'line', // Sobrescribir el tipo a 'line'
+                            data: normalCurveData,
+                            type: 'line',
                             fill: false,
                             borderColor: 'rgba(255, 99, 132, 1)',
                             tension: 0.4,
@@ -320,7 +318,7 @@
                             title: { display: true, text: 'Frecuencia' }
                         },
                         x: {
-                            type: 'linear', // <-- LA SOLUCIÓN: Eje X Numérico Lineal
+                            type: 'linear', // Eje X Numérico Lineal
                             title: {
                                 display: true,
                                 text: 'Media Muestral (x̄)'

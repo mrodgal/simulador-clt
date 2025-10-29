@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Distribuciones Muestrales</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Estilos CSS para el diseño responsive */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        /* Layout responsive (Flexbox) */
+        .main-layout {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .panel-control {
+            flex: 1;
+            min-width: 300px;
+            padding: 25px;
+            border-right: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+        .panel-visualizacion {
+            flex: 2;
+            min-width: 400px;
+            padding: 25px;
+        }
+        
+        /* Estilos de Controles */
+        h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Asegura que el padding no afecte el ancho */
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        input[type="range"] {
+            flex: 1;
+        }
+        #sampleSizeValue {
+            font-weight: 700;
+            background: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            min-width: 30px;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Estilos de Resultados */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 2 columnas */
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #555;
+        }
+        .stat-card p {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #0056b3;
+        }
+        
+        /* Ajuste para móviles */
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            .panel-control {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr; /* 1 columna en móvil */
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="main-layout">
+            
+            <div class="panel-control">
+                <h2>🧭 Panel de Control</h2>
+                
+                <div class="control-group">
+                    <label for="populationInput">Valores de Población (N ≤ 10)</label>
+                    <input type="text" id="populationInput" value="1, 2, 3, 8, 10">
+                </div>
+                
+                <div class="control-group">
+                    <label for="sampleSizeSlider">Tamaño de Muestra (n)</label>
+                    <div class="slider-container">
+                        <input type="range" id="sampleSizeSlider" min="1" max="30" value="5">
+                        <span id="sampleSizeValue">5</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="numSimulations">Número de Simulaciones</label>
+                    <select id="numSimulations">
+                        <option value="100">100</option>
+                        <option value="1000" selected>1000</option>
+                        <option value="5000">5000</option>
+                        <option value="10000">10000</option>
+                    </select>
+                </div>
+                
+                <button id="simulateButton">🚀 Simular</button>
+            </div>
+            
+            <div class="panel-visualizacion">
+                <h2>📊 Resultados de la Simulación</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>🌍 Media Poblacional (μ)</h3>
+                        <p id="popMean">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>🌍 Varianza Poblacional (σ²)</h3>
+                        <p id="popVariance">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>📈 Media de Medias (μ_{\bar{x}})</h3>
+                        <p id="sampleMeanMean">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>📈 Varianza de Medias (σ²_{\bar{x}})</h3>
+                        <p id="sampleMeanVariance">--</p>
+                    </div>
+                </div>
+                
+                <div id="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // 3. Lógica JavaScript de la aplicación
+        
+        // Referencias a elementos del DOM
+        const popInput = document.getElementById('populationInput');
+        const nSlider = document.getElementById('sampleSizeSlider');
+        const nValue = document.getElementById('sampleSizeValue');
+        const numSimsSelect = document.getElementById('numSimulations');
+        const simButton = document.getElementById('simulateButton');
+        
+        // Referencias a tarjetas de estadísticas
+        const popMeanEl = document.getElementById('popMean');
+        const popVarianceEl = document.getElementById('popVariance');
+        const sampleMeanMeanEl = document.getElementById('sampleMeanMean');
+        const sampleMeanVarianceEl = document.getElementById('sampleMeanVariance');
+        
+        // Contexto del gráfico
+        const ctx = document.getElementById('distributionChart').getContext('2d');
+        let chartInstance = null; // Para destruir el gráfico anterior antes de crear uno nuevo
+        
+        // --- Event Listeners ---
+        
+        // Actualizar el valor del deslizador
+        nSlider.addEventListener('input', (e) => {
+            nValue.textContent = e.target.value;
+        });
+        
+        // Ejecutar la simulación al hacer clic
+        simButton.addEventListener('click', runSimulation);
+        
+        // Ejecutar una simulación al cargar la página
+        document.addEventListener('DOMContentLoaded', runSimulation);
+
+        // --- Funciones de Cálculo ---
+        
+        function getPopulation() {
+            let inputText = popInput.value.trim();
+            if (inputText.endsWith(',')) {
+                inputText = inputText.slice(0, -1);
+            }
+            let popArray = inputText.split(',')
+                                    .map(val => parseFloat(val.trim()))
+                                    .filter(val => !isNaN(val));
+            
+            // Limitar a 10 elementos como se pidió
+            if (popArray.length > 10) {
+                popArray = popArray.slice(0, 10);
+                popInput.value = popArray.join(', ');
+                alert('La población se ha limitado a los primeros 10 elementos.');
+            }
+            
+            if (popArray.length === 0) {
+                alert('Población no válida. Usando valores por defecto.');
+                popInput.value = "1, 2, 3, 8, 10";
+                return [1, 2, 3, 8, 10];
+            }
+            
+            return popArray;
+        }
+
+        function calculateMean(arr) {
+            return arr.reduce((acc, val) => acc + val, 0) / arr.length;
+        }
+        
+        function calculateVariance(arr, mean) {
+            // Varianza poblacional (N)
+            return arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / arr.length;
+        }
+
+        // Función de densidad de probabilidad (PDF) de la Normal
+        function normalPDF(x, mean, stdDev) {
+            if (stdDev === 0) return (x === mean) ? Infinity : 0;
+            const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
+            return (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+        }
+
+        // --- Función Principal de Simulación ---
+        
+        function runSimulation() {
+            const population = getPopulation();
+            const n = parseInt(nSlider.value);
+            const numSimulations = parseInt(numSimsSelect.value);
+            
+            if (population.length === 0) return;
+
+            // 1. Calcular estadísticas de la POBLACIÓN
+            const popMean = calculateMean(population);
+            const popVariance = calculateVariance(population, popMean);
+            
+            popMeanEl.textContent = popMean.toFixed(3);
+            popVarianceEl.textContent = popVariance.toFixed(3);
+            
+            // 2. Ejecutar la SIMULACIÓN (Muestreo con reemplazo)
+            const sampleMeans = [];
+            for (let i = 0; i < numSimulations; i++) {
+                let currentSample = [];
+                for (let j = 0; j < n; j++) {
+                    const randomIndex = Math.floor(Math.random() * population.length);
+                    currentSample.push(population[randomIndex]);
+                }
+                const sampleMean = calculateMean(currentSample);
+                sampleMeans.push(sampleMean);
+            }
+            
+            // 3. Calcular estadísticas de la DISTRIBUCIÓN MUESTRAL
+            const sampleMeanMean = calculateMean(sampleMeans);
+            const sampleMeanVariance = calculateVariance(sampleMeans, sampleMeanMean);
+            
+            sampleMeanMeanEl.textContent = sampleMeanMean.toFixed(3);
+            sampleMeanVarianceEl.textContent = sampleMeanVariance.toFixed(3);
+
+            // 4. Preparar datos para el GRÁFICO
+            updateChart(sampleMeans, popMean, popVariance, n);
+        }
+        
+        // --- Función de Gráfico ---
+
+        function updateChart(sampleMeans, popMean, popVariance, n) {
+            // Destruir el gráfico anterior si existe
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            // A. Preparar datos para el Histograma (Diagrama de Barras)
+            const min = Math.min(...sampleMeans);
+            const max = Math.max(...sampleMeans);
+            const numBins = Math.max(10, Math.min(Math.ceil(Math.sqrt(sampleMeans.length)), 40));
+            const binWidth = (max - min) / numBins;
+            
+            const bins = new Array(numBins).fill(0);
+            const labels = new Array(numBins);
+            
+            for (let i = 0; i < numBins; i++) {
+                const binStart = min + i * binWidth;
+                const binEnd = binStart + binWidth;
+                labels[i] = ((binStart + binEnd) / 2).toFixed(2);
+            }
+            
+            sampleMeans.forEach(mean => {
+                let binIndex = Math.floor((mean - min) / binWidth);
+                if (binIndex === numBins) binIndex--; // Para el valor máximo
+                if (binIndex >= 0 && binIndex < numBins) {
+                    bins[binIndex]++;
+                }
+            });
+
+            // B. Preparar datos para el Ajuste Normal (Teorema Central del Límite)
+            const mu_x = popMean; // Media teórica
+            const sigma_x = Math.sqrt(popVariance / n); // Desviación estándar teórica
+            const normalCurveData = [];
+            
+            const scaleFactor = sampleMeans.length * binWidth; // Escalar PDF a la frecuencia del histograma
+            
+            for (let i = 0; i < numBins; i++) {
+                const x = parseFloat(labels[i]);
+                const y = normalPDF(x, mu_x, sigma_x) * scaleFactor;
+                normalCurveData.push(y);
+            }
+
+            // C. Dibujar el Gráfico (Combinado de Barras y Línea)
+            chartInstance = new Chart(ctx, {
+                type: 'bar', // Gráfico base de barras
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Frecuencia de Medias Muestrales (Simulado)',
+                            data: bins,
+                            backgroundColor: 'rgba(0, 123, 255, 0.6)',
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Ajuste Normal Teórico (TCL)',
+                            data: normalCurveData,
+                            type: 'line', // Superponer un gráfico de línea
+                            fill: false,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            tension: 0.1,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Frecuencia'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Media Muestral'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

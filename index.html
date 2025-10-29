@@ -3,17 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Distribuciones Muestrales (N=100)</title>
+    <title>Simulador de Distribuciones Muestrales (Responsive)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* Estilos CSS */
+        /* Tipografía Fluida (Responsive) */
+        html {
+            font-size: 14px; /* Base para móviles */
+        }
+        @media (min-width: 768px) {
+            html {
+                font-size: 15px; /* Base para tablets */
+            }
+        }
+        @media (min-width: 1024px) {
+            html {
+                font-size: 16px; /* Base para PC */
+            }
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
             background-color: #f4f7f6;
             margin: 0;
-            padding: 20px;
+            padding: 1rem;
         }
         .app-container {
             max-width: 1200px;
@@ -29,41 +43,46 @@
         }
         .panel-control {
             flex: 1;
-            min-width: 300px;
-            padding: 25px;
+            min-width: 280px;
+            padding: 1.5rem;
             border-right: 1px solid #e0e0e0;
             background: #fafafa;
         }
         .panel-visualizacion {
             flex: 2;
-            min-width: 400px;
-            padding: 25px;
+            min-width: 300px;
+            padding: 1.5rem;
         }
+        
+        /* Fuentes en 'rem' para escalar */
         h2 {
             margin-top: 0;
             color: #333;
             border-bottom: 2px solid #007bff;
-            padding-bottom: 5px;
+            padding-bottom: 0.5rem;
+            font-size: 1.75rem; 
         }
         .control-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
         }
         label {
             display: block;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
         }
         input[type="text"], input[type="number"], select {
             width: 100%;
-            padding: 10px;
+            padding: 0.75rem;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box; 
+            font-size: 1rem;
         }
         .slider-container {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 1rem;
         }
         input[type="range"] {
             flex: 1;
@@ -71,58 +90,80 @@
         #sampleSizeValue {
             font-weight: 700;
             background: #e0e0e0;
-            padding: 5px 10px;
+            padding: 0.35rem 0.75rem;
             border-radius: 4px;
             min-width: 30px;
             text-align: center;
+            font-size: 1rem;
         }
         button {
             width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
+            padding: 0.8rem;
             border: none;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s;
-            margin-top: 5px; /* Pequeño espacio entre botones */
+            margin-top: 0.5rem;
+        }
+        button#simulateButton {
+             background-color: #007bff;
+             color: white;
         }
         button.regenerate-button {
-            background-color: #28a745; /* Color verde para regenerar */
+            background-color: #28a745;
+            color: white;
         }
         button.regenerate-button:hover {
             background-color: #218838;
         }
-        button:hover {
+        button#simulateButton:hover {
             background-color: #0056b3;
         }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
         .stat-card {
             background: #f9f9f9;
             border: 1px solid #e0e0e0;
             border-radius: 5px;
-            padding: 15px;
+            padding: 1rem;
         }
         .stat-card h3 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
             color: #555;
         }
         .stat-card p {
             margin: 0;
-            font-size: 20px;
+            font-size: 1.4rem;
             font-weight: 700;
             color: #0056b3;
+            word-break: break-all;
         }
         
+        /* Contenedor del Gráfico Responsive */
+        #chart-container {
+            position: relative;
+            width: 100%;
+            height: 50vh; /* Altura en móvil */
+            min-height: 300px;
+        }
+
+        /* Ajustes de Layout */
         @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            .app-container {
+                border-radius: 0;
+                box-shadow: none;
+            }
             .main-layout {
                 flex-direction: column;
             }
@@ -132,6 +173,12 @@
             }
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            #chart-container {
+                height: 400px; /* Altura fija en PC/tablet */
             }
         }
     </style>
@@ -150,7 +197,8 @@
                         <option value="uniform">Uniforme</option>
                         <option value="normal" selected>Normal</option>
                         <option value="skewed">Sesgada</option>
-                        <option value="bimodal">Bimodal</option> </select>
+                        <option value="bimodal">Bimodal</option>
+                    </select>
                     <button id="regeneratePopulationButton" class="regenerate-button">🔄 Regenerar Población</button>
                 </div>
                 
@@ -167,7 +215,7 @@
                     <input type="number" id="numSimulationsInput" min="1" max="50000" value="1000">
                 </div>
                 
-                <button id="simulateButton">🚀 Simular Medias Muestrales</button>
+                <button id="simulateButton">🚀 Simular (Manual)</button>
             </div>
             
             <div class="panel-visualizacion">
@@ -203,17 +251,15 @@
     <script>
         // Referencias a elementos del DOM
         const popTypeSelect = document.getElementById('populationType');
-        const regeneratePopulationButton = document.getElementById('regeneratePopulationButton'); // Nuevo botón
+        const regeneratePopulationButton = document.getElementById('regeneratePopulationButton');
         const nSlider = document.getElementById('sampleSizeSlider');
         const nValue = document.getElementById('sampleSizeValue');
         const numSimsInput = document.getElementById('numSimulationsInput');
         const simButton = document.getElementById('simulateButton');
-        
         const popMeanEl = document.getElementById('popMean');
         const popVarianceEl = document.getElementById('popVariance');
         const sampleMeanMeanEl = document.getElementById('sampleMeanMean');
         const sampleMeanVarianceEl = document.getElementById('sampleMeanVariance');
-        
         const ctx = document.getElementById('distributionChart').getContext('2d');
         let chartInstance = null; 
         
@@ -223,31 +269,47 @@
             variance: 0
         };
 
-        // --- Event Listeners ---
+        // --- Event Listeners con Auto-Refresco ---
         
         nSlider.addEventListener('input', (e) => {
             nValue.textContent = e.target.value;
+            runSimulation(); // Auto-refresco al mover el slider
         });
         
-        // Regenerar la población base si el usuario cambia el tipo
         popTypeSelect.addEventListener('change', () => {
             generatePopulation();
-            runSimulation(); // Ejecutar simulación con la nueva población
+            runSimulation(); // Auto-refresco al cambiar tipo
         });
 
-        // Evento para el nuevo botón de regenerar
         regeneratePopulationButton.addEventListener('click', () => {
             generatePopulation();
-            runSimulation(); // Ejecutar simulación con la nueva población
+            runSimulation(); // Auto-refresco al regenerar
         });
         
+        numSimsInput.addEventListener('input', () => {
+            // Usa 'debounce' para esperar que el usuario termine de teclear
+            debounce(runSimulation, 500)();
+        });
+        
+        // Botón manual por si acaso
         simButton.addEventListener('click', runSimulation);
         
-        // Al cargar: 1. Generar población, 2. Ejecutar simulación inicial
+        // Carga inicial
         document.addEventListener('DOMContentLoaded', () => {
-            generatePopulation(); // Genera la primera población (por defecto 'Normal')
+            generatePopulation();
             runSimulation();
         });
+        
+        // Función Debounce para optimizar el input de número
+        let debounceTimer;
+        function debounce(func, delay) {
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(context, args), delay);
+            }
+        }
 
         // --- Funciones de Cálculo ---
         
@@ -260,12 +322,11 @@
         }
 
         function normalPDF(x, mean, stdDev) {
-            if (stdDev === 0) return (x === mean) ? Infinity : 0;
+            if (stdDev <= 0) return (x === mean) ? Infinity : 0;
             const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
             return (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
         }
         
-        // --- Función para generar la población (N=100) ---
         function generatePopulation() {
             const N = 100;
             const type = popTypeSelect.value;
@@ -273,57 +334,43 @@
             
             switch(type) {
                 case 'uniform':
-                    // Distribución uniforme (ej: de 0 a 100)
                     for (let i = 0; i < N; i++) {
                         popData.push(Math.random() * 100);
                     }
                     break;
-                
                 case 'skewed':
-                    // Distribución sesgada a la derecha (usando Math.pow)
-                    // Más valores bajos, cola a la derecha
                     for (let i = 0; i < N; i++) {
                         popData.push(Math.pow(Math.random(), 3) * 100); 
                     }
                     break;
-
                 case 'bimodal':
-                    // Distribución bimodal (dos picos)
-                    // Combinamos dos normales con diferentes medias
                     for (let i = 0; i < N; i++) {
-                        if (Math.random() < 0.5) { // 50% de probabilidad para cada modo
-                            popData.push((boxMullerRandom() * 10) + 30); // Modo 1: media ~30
+                        if (Math.random() < 0.5) {
+                            popData.push((boxMullerRandom() * 10) + 30);
                         } else {
-                            popData.push((boxMullerRandom() * 10) + 70); // Modo 2: media ~70
+                            popData.push((boxMullerRandom() * 10) + 70);
                         }
                     }
                     break;
-
                 case 'normal':
                 default:
-                    // Distribución normal (Box-Muller transform)
-                    // Media 50, Desviación Estándar 15
-                    for (let i = 0; i < N; i++) { // Bucle hasta N, Box-Muller genera pares
+                    for (let i = 0; i < N; i++) {
                         popData.push((boxMullerRandom() * 15) + 50);
                     }
                     break;
             }
             
-            // Asegurarse de que los valores estén dentro de un rango razonable (ej. 0-100)
             popData = popData.map(val => Math.max(0, Math.min(100, val)));
-
             generatedPopulation.data = popData;
             generatedPopulation.mean = calculateMean(popData);
             generatedPopulation.variance = calculateVariance(popData, generatedPopulation.mean);
-            
             popMeanEl.textContent = generatedPopulation.mean.toFixed(3);
             popVarianceEl.textContent = generatedPopulation.variance.toFixed(3);
         }
 
-        // Helper para la transformación Box-Muller (genera un número normal estándar)
         function boxMullerRandom() {
             let u = 0, v = 0;
-            while(u === 0) u = Math.random(); // Converter to (0,1)
+            while(u === 0) u = Math.random();
             while(v === 0) v = Math.random();
             return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
         }
@@ -332,21 +379,18 @@
         
         function runSimulation() {
             const numSimulations = parseInt(numSimsInput.value);
+            // Validación suave para no molestar al usuario mientras teclea
             if (isNaN(numSimulations) || numSimulations < 1 || numSimulations > 50000) {
-                alert("Por favor, introduce un número de simulaciones entre 1 y 50,000.");
+                console.warn("Simulación omitida: valor inválido.");
                 return;
             }
             
             const population = generatedPopulation.data;
             const popMean = generatedPopulation.mean;
             const popVariance = generatedPopulation.variance;
-            
             const n = parseInt(nSlider.value);
             
-            if (population.length === 0) {
-                alert("Error: La población no se ha generado correctamente.");
-                return;
-            }
+            if (population.length === 0) return;
 
             const sampleMeans = [];
             for (let i = 0; i < numSimulations; i++) {
@@ -375,39 +419,31 @@
                 chartInstance.destroy();
             }
 
-            // Asegurarse de tener un rango válido, incluso si solo hay un valor en sampleMeans
             const minVal = sampleMeans.length > 0 ? Math.min(...sampleMeans) : 0;
-            const maxVal = sampleMeans.length > 0 ? Math.max(...sampleMeans) : 100; // Asumimos rango 0-100 para poblaciones
+            const maxVal = sampleMeans.length > 0 ? Math.max(...sampleMeans) : 100;
             
-            // Si min y max son iguales (ej: n=1 y todos los valores de la muestra son iguales)
-            // ajustamos ligeramente el rango para que el histograma se pueda dibujar
             let adjustedMin = minVal;
             let adjustedMax = maxVal;
             if (minVal === maxVal) {
-                adjustedMin = minVal - 1;
-                adjustedMax = maxVal + 1;
-                if (adjustedMin < 0) adjustedMin = 0;
-                if (adjustedMax > 100) adjustedMax = 100; // O un límite más sensato según tus datos
-                if (adjustedMin === adjustedMax) { // Caso extremo si min/max es 0 o 100
-                     adjustedMin = minVal * 0.9;
-                     adjustedMax = minVal * 1.1;
-                     if (adjustedMin === adjustedMax) { // Si minVal es 0
-                         adjustedMin = 0; adjustedMax = 1;
-                     }
-                 }
+                adjustedMin = minVal > 0 ? minVal * 0.9 : -1;
+                adjustedMax = maxVal > 0 ? maxVal * 1.1 : 1;
+                if(adjustedMin === 0 && adjustedMax === 0) adjustedMax = 1;
             }
-
 
             const numBins = Math.max(10, Math.min(Math.ceil(Math.sqrt(sampleMeans.length)), 75));
             const binWidth = (adjustedMax - adjustedMin) / numBins;
             
+            if(binWidth <= 0) { // Evitar bucles infinitos si el ancho es 0
+                 console.error("Ancho de bin inválido");
+                 return;
+            }
+
             const bins = new Array(numBins).fill(0);
             const labels = new Array(numBins);
             
             for (let i = 0; i < numBins; i++) {
                 const binStart = adjustedMin + i * binWidth;
-                const binEnd = binStart + binWidth;
-                labels[i] = ((binStart + binEnd) / 2).toFixed(2);
+                labels[i] = (binStart + binWidth / 2).toFixed(2);
             }
             
             sampleMeans.forEach(mean => {
@@ -456,7 +492,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false, // Clave para que el gráfico llene el div
                     scales: {
                         y: {
                             beginAtZero: true,
